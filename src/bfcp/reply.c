@@ -55,9 +55,12 @@ int bfcp_reply(struct bfcp_conn *bc, const struct bfcp_msg *req,
 		return ENOMEM;
 
 	bc->mb->pos = bc->mb->end = BFCP_HDR_OFFSET;
+	/* The R flag exists in version 2 only (RFC 8855). In version 1
+	 * (RFC 4582) the bit is reserved and sent as zero; Cisco TC
+	 * endpoints drop version 1 responses that set it. */
 	va_start(ap, attrc);
-	err = bfcp_msg_vencode(bc->mb, req->ver, true, prim, req->confid,
-			       req->tid, req->userid, attrc, &ap);
+	err = bfcp_msg_vencode(bc->mb, req->ver, req->ver >= BFCP_VER2, prim,
+			       req->confid, req->tid, req->userid, attrc, &ap);
 	va_end(ap);
 
 	if (err)
